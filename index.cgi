@@ -1,12 +1,15 @@
 #!/usr/bin/python3
+import sys
+sys.path.append('/usr/local/lib/python3.11/site-packages/')
 import socket
 import cgi
-from json import dumps
+# from json import dumps
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo import DESCENDING
 from bson.json_util import dumps, loads
 from bson import decode
+import os
 
 Title="NSX Solution Demo: フルーツ在庫表示"
 
@@ -20,7 +23,7 @@ def get_host_info():
 
 def startup_db_client():
 #    myclient = MongoClient("mongodb://localhost:27017/")
-    myclient = MongoClient("mongodb://mongoadmin:password@172.19.64.14:32280/?authSource=fruitsdb&authMechanism=SCRAM-SHA-1") # nodeport
+    myclient = MongoClient("mongodb://mongoadmin:password@" + os.environ['MONGO_HOST'] + ":" + os.environ['MONGO_PORT'] + "/?authSource=fruitsdb&authMechanism=SCRAM-SHA-1")
 #    print("Connected to the MongoDB database!")
     return myclient
 
@@ -100,12 +103,19 @@ if "query" not in form or query == "html":
     print("            </tr>")
     print("        </thead>")
     print("        <tbody align=\"left\" style=\"background-color:#F0F0F0;\">")
-    for x in cursor:
-        print("            <tr>")
-        print("                <th>%s</th>" % x["name"])
-        print("                <th>%s</th>" % x["production"])
-        print("                <th>%s</th>" % x["quantity"])
-        print("            </tr>")
+    try:
+        for x in cursor:
+            print("            <tr>")
+            print("                <th>%s</th>" % x["name"])
+            print("                <th>%s</th>" % x["production"])
+            print("                <th>%s</th>" % x["quantity"])
+            print("            </tr>")
+    except:
+            print("            <tr>")
+            print("                <th><font color=\"red\">DB Read Error</font></th>")
+            print("                <th></th>")
+            print("                <th></th>")
+            print("            </tr>")
     print("        </tbody>")
     print("    </table>")
     print("</body>")
@@ -116,8 +126,11 @@ elif query == "json":
     print("Content-Type: text/json;")
     print("")
     res["result"] = []
-    for x in cursor:
-        res["result"].append(x)
+    try:
+        for x in cursor:
+            res["result"].append(x)
+    except:
+        res["result"].append({"error":"DB Read Error"})
     print(dumps(res, indent=2, ensure_ascii=False))
 
 else:
