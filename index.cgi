@@ -8,6 +8,8 @@ from pymongo import DESCENDING
 from bson.json_util import dumps, loads
 from bson import decode
 
+Title="NSX Solution Demo: フルーツ在庫表示"
+
 def get_host_info():
 # Get Socket to investigate Pod address and hostname
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -19,12 +21,12 @@ def get_host_info():
 def startup_db_client():
 #    myclient = MongoClient("mongodb://localhost:27017/")
     myclient = MongoClient("mongodb://mongoadmin:password@172.19.64.14:32280/?authSource=fruitsdb&authMechanism=SCRAM-SHA-1") # nodeport
-    print("Connected to the MongoDB database!")
+#    print("Connected to the MongoDB database!")
     return myclient
 
 def shutdown_db_client(myclient):
     myclient.close()
-    print("Connection Closed!")
+#    print("Connection Closed!")
 
 def find_from(mycol):
     if (data := mycol.find()) is not None:
@@ -48,7 +50,6 @@ cursor = mycol.find(projection={'_id':0, 'id':1, 'name':1, 'production':1, 'quan
 #for x in cursor:
 #    print(x)
 
-shutdown_db_client(myclient)
 
 # Output html or json data based on query option
 if "query" not in form or query == "html":
@@ -76,25 +77,53 @@ if "query" not in form or query == "html":
     print("    <title>%s</title>" % ip)
     print("</head>")
     print("<body>")
-    print("    <h1>NSX Solution Demo/Test Page")
-    print("    <div style=\"background-color:%s;\">" % color)
-    print("        <h2>IP address: %s</h2>" % ip)
-    print("        <h2>Hostname: %s</h2>" % h)
-    print("    </div>")
+    print("    <h1>%s" % Title)
+    print("    <table border=\"0\">")
+    print("        <tbody align=\"left\" style=\"background-color:%s;\">" % color)
+    print("            <tr>")
+    print("                <th>IP address</th>")
+    print("                <th>%s</th>" % ip)
+    print("            </tr>")
+    print("            <tr>")
+    print("                <th>Hostname</th>")
+    print("                <th>%s</th>" % h)
+    print("            </tr>")
+    print("        </tbody>")
+    print("    </table>")
+    print("    <table border=\"0\" width=\"640\">")
+    print("        <caption>Query Result</caption>")
+    print("        <thead style=\"background-color:#E0E0F0;\">")
+    print("            <tr>")
+    print("                <th>Name</th>")
+    print("                <th>Production</th>")
+    print("                <th>Quantity</th>")
+    print("            </tr>")
+    print("        </thead>")
+    print("        <tbody align=\"left\" style=\"background-color:#F0F0F0;\">")
     for x in cursor:
-        print(x)
+        print("            <tr>")
+        print("                <th>%s</th>" % x["name"])
+        print("                <th>%s</th>" % x["production"])
+        print("                <th>%s</th>" % x["quantity"])
+        print("            </tr>")
+    print("        </tbody>")
+    print("    </table>")
     print("</body>")
     print("</html>")
 
 elif query == "json":
-    res = {"name":"NSX Solution Demo/Test Page", "address":ip, "hostname":h}
+    res = {"name":Title, "address":ip, "hostname":h}
     print("Content-Type: text/json;")
     print("")
-    print(dumps(res, indent=2, ensure_ascii=False))
+    res["result"] = []
     for x in cursor:
-        print(x)
+        res["result"].append(x)
+    print(dumps(res, indent=2, ensure_ascii=False))
 
 else:
     raise Exception("Invalid Parameter: query=" + query)
+
+# shutdown db connection
+shutdown_db_client(myclient)
 
 # end script

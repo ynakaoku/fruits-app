@@ -11,6 +11,9 @@ RUN chmod +x index.cgi
 RUN mv index.cgi /usr/local/apache2/htdocs/
 
 RUN apt-get -y update && apt-get -y install python3
+RUN apt-get -y install python3-pip
+RUN python3 -m pip install pymongo
+
 RUN sed -ri 's/#LoadModule cgid_module/LoadModule cgid_module/g; \ 
              s/DirectoryIndex index.html/DirectoryIndex index.cgi/g; \ 
              s/Options Indexes FollowSymLinks/Options Indexes FollowSymLinks ExecCGI/g; \
