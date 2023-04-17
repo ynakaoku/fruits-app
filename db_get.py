@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 import sys
-sys.path.append('/usr/local/lib/python3.11/site-packages/')
+sys.path.append('/usr/local/lib/python3.9/site-packages/')
 import socket
 import cgi
-# from json import dumps
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo import DESCENDING
@@ -12,6 +11,8 @@ from bson import decode
 import os
 
 Title="NSX Solution Demo: フルーツ在庫表示"
+MongoHost = os.environ['MONGO_HOST'] 
+MongoPort = os.environ['MONGO_PORT']
 
 def get_host_info():
 # Get Socket to investigate Pod address and hostname
@@ -22,14 +23,11 @@ def get_host_info():
     return ip, h
 
 def startup_db_client():
-#    myclient = MongoClient("mongodb://localhost:27017/")
-    myclient = MongoClient("mongodb://mongoadmin:password@" + os.environ['MONGO_HOST'] + ":" + os.environ['MONGO_PORT'] + "/?authSource=fruitsdb&authMechanism=SCRAM-SHA-1")
-#    print("Connected to the MongoDB database!")
+    myclient = MongoClient("mongodb://mongoadmin:password@" + MongoHost + ":" + MongoPort + "/?authSource=fruitsdb&authMechanism=SCRAM-SHA-1")
     return myclient
 
 def shutdown_db_client(myclient):
     myclient.close()
-#    print("Connection Closed!")
 
 def find_from(mycol):
     if (data := mycol.find()) is not None:
@@ -47,12 +45,6 @@ myclient = startup_db_client()
 mydb   = myclient["fruitsdb"]
 mycol  = mydb["fruits"]
 cursor = mycol.find(projection={'_id':0, 'id':1, 'name':1, 'production':1, 'quantity':1}, sort=[('id',ASCENDING)])
-
-#print(dumps(cursor, indent=2))
-
-#for x in cursor:
-#    print(x)
-
 
 # Output html or json data based on query option
 if "query" not in form or query == "html":
@@ -91,6 +83,10 @@ if "query" not in form or query == "html":
     print("                <th>Hostname</th>")
     print("                <th>%s</th>" % h)
     print("            </tr>")
+    print("            <tr>")
+    print("                <th>DB Info</th>")
+    print("                <th>%s:%s</th>" % (MongoHost, MongoPort) )
+    print("            </tr>")
     print("        </tbody>")
     print("    </table>")
     print("    <table border=\"0\" width=\"640\">")
@@ -122,7 +118,7 @@ if "query" not in form or query == "html":
     print("</html>")
 
 elif query == "json":
-    res = {"name":Title, "address":ip, "hostname":h}
+    res = {"name":Title, "address":ip, "hostname":h, "db_info":MongoHost + ":" + MongoPort}
     print("Content-Type: text/json;")
     print("")
     res["result"] = []
