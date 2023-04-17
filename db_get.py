@@ -72,7 +72,7 @@ if "query" not in form or query == "html":
     print("    <title>%s</title>" % ip)
     print("</head>")
     print("<body>")
-    print("    <h1>%s" % Title)
+    print("    <h1>%s</h1>" % Title)
     print("    <table border=\"0\">")
     print("        <tbody align=\"left\" style=\"background-color:%s;\">" % color)
     print("            <tr>")
