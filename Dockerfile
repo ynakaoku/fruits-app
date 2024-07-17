@@ -1,5 +1,5 @@
 #FROM python:3.5.2
-FROM python:3.9
+FROM python:3.9 as build
 
 # RUN groupadd web
 # RUN useradd -d /home/python -m python
